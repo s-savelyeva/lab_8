@@ -6,7 +6,6 @@ using System.Xml.Serialization;
 
 namespace lab_8
 {
-    [Serializable]
     public class BusSchedule
     {
         public int Id { get; set; }
@@ -15,18 +14,15 @@ namespace lab_8
         public DateTime DepartureTime { get; set; }
         public double Duration { get; set; } // в минутах
 
-        public BusSchedule()
+        public BusSchedule(int id, string busNumber, string destination, DateTime departureTime, double duration)
         {
+            this.Id = id;
+            this.BusNumber = busNumber;
+            this.Destination = destination;
+            this.DepartureTime = departureTime;
+            this.Duration = duration;
         }
 
-        public BusSchedule(int id, string busNumber, string destination, DateTime departureTime, int duration)
-        {
-            Id = id;
-            BusNumber = busNumber;
-            Destination = destination;
-            DepartureTime = departureTime;
-            Duration = duration;
-        }
 
         public override string ToString()
         {
@@ -41,12 +37,15 @@ namespace lab_8
             ScheduleManager manager = new ScheduleManager();
             while (true)
             {
+                bool success;
                 Console.WriteLine("\n1. Посмотреть расписание");
                 Console.WriteLine("2. Добавить расписание");
                 Console.WriteLine("3. Удалить расписание");
                 Console.WriteLine("4. Показать расписание по месту назначения");
                 Console.WriteLine("5. Получить расписание по ID");
-                Console.WriteLine("6. Выйти");
+                Console.WriteLine("6. Получить рейсы, отправляющиеся после указанного времени");
+                Console.WriteLine("7. Получить общее количество рейсов в пункт назначения");
+                Console.WriteLine("8. Выйти");
                 Console.Write("Выберите пункт: ");
 
                 var choice = Console.ReadLine();
@@ -59,7 +58,7 @@ namespace lab_8
                         break;
 
                     case "2":
-                        bool success = false;
+                        success = false;
                         
                         Console.Write("Введите номер автобуса: ");
                         string busNumber = Console.ReadLine();
@@ -116,8 +115,27 @@ namespace lab_8
 
 
                     case "3":
-                        Console.Write("Введите ID расписания для удаления: ");
-                        int idToDelete = int.Parse(Console.ReadLine());
+                        success = false;
+                        int idToDelete = 1;
+                        while (!success)
+                        {
+                            Console.Write("Введите ID расписания для удаления: ");
+                            if (Int32.TryParse(Console.ReadLine(), out idToDelete))
+                            {
+                                if (idToDelete > 0)
+                                {
+                                    success = true;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Неправильный ID. Введите заново");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Неправильный ID. Введите заново");
+                            }
+                        }
                         manager.DeleteSchedule(idToDelete);
                         break;
 
@@ -140,8 +158,28 @@ namespace lab_8
                         break;
 
                     case "5":
-                        Console.Write("Введите ID расписания: ");
-                        int idToGet = int.Parse(Console.ReadLine());
+                        success = false;
+                        int idToGet = 1;
+                        while (!success)
+                        {
+                            Console.Write("Введите ID расписания: ");
+                            if (Int32.TryParse(Console.ReadLine(), out idToGet))
+                            {
+                                if (idToGet > 0)
+                                {
+                                    success = true;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Неправильный ID. Введите заново");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Неправильный ID. Введите заново");
+                            }
+                        }
+                        
                         var result = manager.GetScheduleById(idToGet);
                         if (result != null)
                         {
@@ -153,8 +191,44 @@ namespace lab_8
                         }
 
                         break;
-
                     case "6":
+                        DateTime departureTimeAfter = new DateTime();
+                        success = false;
+                        while (!success)
+                        {
+                            Console.Write("Введите время (yyyy-mm-dd hh:mm) для получения рейсов: ");
+                            if (!DateTime.TryParse(Console.ReadLine(), out departureTimeAfter))
+                            {
+                                Console.WriteLine("Неправильный формат даты. Введите заново");
+                            }
+                            else
+                            {
+                                success = true;
+                            }
+                        }
+                        var departingSchedules = manager.GetSchedulesDepartingAfter(departureTimeAfter);
+                        if (departingSchedules.Count > 0)
+                        {
+                            Console.WriteLine("Рейсы, отправляющиеся после указанного времени:");
+                            foreach (var schedule in departingSchedules)
+                            {
+                                Console.WriteLine(schedule);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Рейсы не найдены.");
+                        }
+                        break;
+                    
+                    case "7":
+                        Console.Write("Введите пункт назначения для подсчета рейсов: ");
+                        string countDestination = Console.ReadLine();
+                        int totalCount = manager.GetScheduleCountByDestination(countDestination);
+                        Console.WriteLine($"Общее количество рейсов в '{countDestination}': {totalCount}");
+                        break;
+                    
+                    case "8":
                         return;
 
                     default:
