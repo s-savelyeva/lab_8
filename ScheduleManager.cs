@@ -6,7 +6,9 @@ using System.Text;
 
 namespace lab_8
 {
-
+    /// <summary>
+    /// Класс для выполнения запросов к базе данных
+    /// </summary>
     public class ScheduleManager
     {
         private List<BusSchedule> schedules;
@@ -14,10 +16,14 @@ namespace lab_8
     
         public ScheduleManager()
         {
-            schedules = LoadSchedule();
+            schedules = loadSchedule();
         }
-    
-        public List<BusSchedule> LoadSchedule()
+        
+        /// <summary>
+        /// Загрузка всех расписаний из бинарного файла
+        /// </summary>
+        /// <returns>Список всех расписаний, содержащихся в файле</returns>
+        public List<BusSchedule> loadSchedule()
         {
             if (!File.Exists(fileName))
                 return new List<BusSchedule>();
@@ -55,8 +61,11 @@ namespace lab_8
             }
             return tasks;
         }
-    
-        public void ViewSchedules()
+        
+        /// <summary>
+        /// Выводит все расписания на экран
+        /// </summary>
+        public void viewSchedules()
         {
             if (schedules.Count == 0)
             {
@@ -73,13 +82,17 @@ namespace lab_8
             
         }
     
-        public void DeleteSchedule(int id)
+        /// <summary>
+        /// Удаляет расписание по полученному id
+        /// </summary>
+        /// <param name="id">id для удаления</param>
+        public void deleteSchedule(int id)
         {
-            var schedule = schedules.FirstOrDefault(s => s.Id == id);
+            var schedule = getScheduleById(id);
             if (schedule != null)
             {
                 schedules.Remove(schedule);
-                SaveSchedule();
+                saveSchedule();
                 Console.WriteLine("Расписание удалено.");
             }
             else
@@ -88,19 +101,27 @@ namespace lab_8
             }
         }
     
-        public void AddSchedule(BusSchedule newSchedule)
+        /// <summary>
+        /// Добавляет расписание в бинарный файл
+        /// </summary>
+        /// <param name="newSchedule">Расписание для добавления</param>
+        public void addSchedule(BusSchedule newSchedule)
         {
             schedules.Add(newSchedule);
-            SaveSchedule();
+            saveSchedule();
         }
     
-        private void SaveSchedule()
+        /// <summary>
+        /// Метод для записи расписаний в бинарный файл
+        /// </summary>
+        private void saveSchedule()
         {
             FileStream fs = null;
             BinaryWriter writer = null;
 
             try
             {
+                
                 fs = new FileStream(fileName, FileMode.Create);
                 writer = new BinaryWriter(fs, Encoding.UTF8);
 
@@ -127,24 +148,58 @@ namespace lab_8
             }
         }
     
-        public List<BusSchedule> GetSchedulesByDestination(string destination)
+        /// <summary>
+        /// Получение всех расписаний, у которых конечная остановка совпадает с заданнной
+        /// </summary>
+        /// <param name="destination">Конечная остановка</param>
+        /// <returns>Список всех расписаний, у которых конечная остановка совпадает с заданной</returns>
+        public List<BusSchedule> getSchedulesByDestination(string destination)
         {
-            return schedules.Where(s => s.Destination.Equals(destination, StringComparison.OrdinalIgnoreCase)).ToList();
+             List<BusSchedule> resultSchedules = (from schedule in schedules
+                            where schedule.Destination.Equals((destination))
+                            orderby schedule
+                            select schedule).ToList();
+            return resultSchedules;
         }
     
-        public BusSchedule GetScheduleById(int id)
+        /// <summary>
+        /// Получение расписания по его id
+        /// </summary>
+        /// <param name="id">id расписания, которое надо получить</param>
+        /// <returns>Расписание по его id</returns>
+        public BusSchedule getScheduleById(int id)
         {
-            return schedules.FirstOrDefault(s => s.Id == id);
+            BusSchedule resultSchedule = (from schedule in schedules
+                                        where schedule.Id == id
+                                        select schedule).FirstOrDefault();
+            return resultSchedule;
         }
         
-        public List<BusSchedule> GetSchedulesDepartingAfter(DateTime time)
+        /// <summary>
+        /// Получение рейсов, которые отправляются после заданного времени
+        /// </summary>
+        /// <param name="time">Время отправления</param>
+        /// <returns>Список расписаний, которые отправляются после заданного времени</returns>
+        public List<BusSchedule> getSchedulesDepartingAfter(DateTime time)
         {
-            return schedules.Where(s => s.DepartureTime >= time).ToList();
+             List<BusSchedule> resultSchedules = (from schedule in schedules
+                            where schedule.DepartureTime >= time
+                            orderby schedule
+                            select schedule).ToList();
+            return resultSchedules;
         }
         
-        public int GetScheduleCountByDestination(string destination)
+        /// <summary>
+        /// Получение количества рейсов, у которых конечная остановка совпадает с заданной
+        /// </summary>
+        /// <param name="destination">Конечная остановка</param>
+        /// <returns>Количество рейсов, у которых конечная остановка совпадает с заданной</returns>
+        public int getScheduleCountByDestination(string destination)
         {
-            return schedules.Count(s => s.Destination.Equals(destination, StringComparison.OrdinalIgnoreCase));
+            int schedulesCount = (from schedule in schedules
+                                where schedule.Destination.Equals((destination))
+                                select schedule).Count();
+            return schedulesCount;
         }
     }
 }
